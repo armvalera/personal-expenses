@@ -6,32 +6,23 @@ import (
     "personalexpenses/pkg/db"
 )
 
-// Category структура для представления категории.
 type Category struct {
     ID   int
     Name string
 }
 
-// CreateCategory создает новую категорию в базе данных.
-func CreateCategory(ctx context.Context, name string) error {
-    conn := db.GetDBConnection()
-    defer conn.Close(ctx)
-
-    // Вставляем категорию в таблицу
+func CreateCategory(ctx context.Context, db *db.DB, name string) error {
+    conn := db.GetPool()
     _, err := conn.Exec(ctx, "INSERT INTO categories (name) VALUES ($1)", name)
     if err != nil {
         return fmt.Errorf("ошибка при добавлении категории в базу данных: %v", err)
     }
-
     fmt.Printf("Категория '%s' успешно добавлена!\n", name)
     return nil
 }
 
-// GetCategories получает все категории из базы данных.
-func GetCategories(ctx context.Context) ([]Category, error) {
-    conn := db.GetDBConnection()
-    defer conn.Close(ctx)
-
+func GetCategories(ctx context.Context, db *db.DB) ([]Category, error) {
+    conn := db.GetPool()
     rows, err := conn.Query(ctx, "SELECT id, name FROM categories")
     if err != nil {
         return nil, fmt.Errorf("ошибка при получении категорий из базы данных: %v", err)
@@ -54,17 +45,12 @@ func GetCategories(ctx context.Context) ([]Category, error) {
     return categories, nil
 }
 
-// DeleteCategory удаляет категорию по ID.
-func DeleteCategory(ctx context.Context, categoryID int) error {
-    conn := db.GetDBConnection()
-    defer conn.Close(ctx)
-
-    // Удаляем категорию из базы данных
+func DeleteCategory(ctx context.Context, db *db.DB, categoryID int) error {
+    conn := db.GetPool()
     _, err := conn.Exec(ctx, "DELETE FROM categories WHERE id = $1", categoryID)
     if err != nil {
         return fmt.Errorf("ошибка при удалении категории: %v", err)
     }
-
     fmt.Printf("Категория с ID %d успешно удалена!\n", categoryID)
     return nil
 }

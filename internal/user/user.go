@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"personalexpenses/pkg/db"
 	"personalexpenses/pkg/utils"
-
 )
 
 // User структура для представления данных пользователя.
@@ -23,9 +22,15 @@ func RegisterUser(ctx context.Context, user User) error {
 		return fmt.Errorf("ошибка хеширования пароля: %v", err)
 	}
 
-	// Подключаемся к базе данных
-	conn := db.GetDBConnection()
-	defer conn.Close(ctx)
+	// Получаем подключение к базе данных через пул
+	database, err := db.NewDB()
+	if err != nil {
+		return fmt.Errorf("не удалось подключиться к базе данных: %v", err)
+	}
+	defer database.Close()
+
+	// Используем пул соединений
+	conn := database.GetPool()
 
 	// Вставляем нового пользователя в таблицу
 	_, err = conn.Exec(ctx, "INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", user.Username, user.Email, hashedPassword)
